@@ -1,9 +1,9 @@
 <?php
 
-namespace Barryvdh\TranslationManager\Console;
+namespace Omt\TranslationManager\Console;
 
 use Illuminate\Console\Command;
-use Barryvdh\TranslationManager\Manager;
+use Omt\TranslationManager\Manager;
 
 class ResetCommand extends Command
 {
@@ -12,7 +12,7 @@ class ResetCommand extends Command
      *
      * @var string
      */
-    protected $name = 'translations:reset';
+    protected $name = 'translations:reset {tenant_id}';
 
     /**
      * The console command description.
@@ -35,7 +35,8 @@ class ResetCommand extends Command
      */
     public function handle()
     {
-        $this->manager->truncateTranslations();
+        $tenant_id = $this->argument('tenant_id');
+        $this->manager->truncateTranslations($tenant_id);
         $this->info('All translations are deleted');
     }
 }

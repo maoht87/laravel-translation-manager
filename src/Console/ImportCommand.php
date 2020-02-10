@@ -1,8 +1,8 @@
 <?php
 
-namespace Barryvdh\TranslationManager\Console;
+namespace Omt\TranslationManager\Console;
 
-use Barryvdh\TranslationManager\Manager;
+use Omt\TranslationManager\Manager;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -13,7 +13,7 @@ class ImportCommand extends Command
      *
      * @var string
      */
-    protected $name = 'translations:import';
+    protected $name = 'translations:import {tenant_id}';
 
     /**
      * The console command description.
@@ -36,8 +36,9 @@ class ImportCommand extends Command
      */
     public function handle()
     {
+        $tenant_id = $this->argument('tenant_id');
         $replace = $this->option('replace');
-        $counter = $this->manager->importTranslations($replace);
+        $counter = $this->manager->importTranslations($tenant_id, $replace);
         $this->info('Done importing, processed '.$counter.' items!');
     }
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace Barryvdh\TranslationManager\Console;
+namespace Omt\TranslationManager\Console;
 
-use Barryvdh\TranslationManager\Manager;
+use Omt\TranslationManager\Manager;
 use Illuminate\Console\Command;
 
 class CleanCommand extends Command
@@ -12,7 +12,7 @@ class CleanCommand extends Command
      *
      * @var string
      */
-    protected $name = 'translations:clean';
+    protected $name = 'omt_translations:clean {tenant_id}';
 
     /**
      * The console command description.
@@ -35,7 +35,8 @@ class CleanCommand extends Command
      */
     public function handle()
     {
-        $this->manager->cleanTranslations();
+        $tenant_id = $this->argument('tenant_id');
+        $this->manager->cleanTranslations($tenant_id);
         $this->info('Done cleaning translations');
     }
 }

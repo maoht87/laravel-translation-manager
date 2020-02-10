@@ -1,4 +1,4 @@
-<?php namespace Barryvdh\TranslationManager\Models;
+<?php namespace Omt\TranslationManager\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use DB;
@@ -20,8 +20,8 @@ class Translation extends Model{
     const STATUS_SAVED = 0;
     const STATUS_CHANGED = 1;
 
-    protected $table = 'ltm_translations';
-    protected $guarded = array('id', 'created_at', 'updated_at');
+    protected $table = 'omt_translations';
+    protected $guarded = array('id', 'tenant_id', 'created_at', 'updated_at');
 
     public function scopeOfTranslatedGroup($query, $group)
     {
@@ -42,10 +42,10 @@ class Translation extends Model{
 
         switch (DB::getDriverName()){
             case 'mysql':
-                $select = 'DISTINCT `group`';
+                $select = 'DISTINCT `tenant_id`, `group`';
                 break;
             default:
-                $select = 'DISTINCT "group"';
+                $select = 'DISTINCT `tenant_id`, "group"';
                 break;
         }
 
