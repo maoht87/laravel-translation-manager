@@ -73,7 +73,7 @@ class ManagerServiceProvider extends ServiceProvider {
             $migrationPath => base_path('database/migrations'),
         ], 'migrations');
 
-        $config = $this->app['config']->get('translation-manager.route', []);
+        $config = $this->app['config']->get('omt-translation-manager.route', []);
         $config['namespace'] = 'Omt\TranslationManager';
 
         $router->group($config, function($router)

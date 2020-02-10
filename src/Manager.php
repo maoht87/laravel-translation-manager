@@ -35,7 +35,7 @@ class Manager
         $this->app = $app;
         $this->files = $files;
         $this->events = $events;
-        $this->config = $app['config']['translation-manager'];
+        $this->config = $app['config']['omt-translation-manager'];
         $this->ignoreFilePath = storage_path('.ignore_locales');
         $this->locales = [];
         $this->ignoreLocales = $this->getIgnoredLocales();
@@ -227,23 +227,24 @@ class Manager
         foreach ($groupKeys as $key) {
             // Split the group and item
             list($group, $item) = explode('.', $key, 2);
-            $this->missingKey('', $group, $item);
+            $this->missingKey($tenant_id, '', $group, $item);
         }
 
         foreach ($stringKeys as $key) {
             $group = self::JSON_GROUP;
             $item = $key;
-            $this->missingKey('', $group, $item);
+            $this->missingKey($tenant_id, '', $group, $item);
         }
 
         // Return the number of found translations
         return count($groupKeys + $stringKeys);
     }
 
-    public function missingKey($namespace, $group, $key)
+    public function missingKey($tenant_id, $namespace, $group, $key)
     {
         if (!in_array($group, $this->config['exclude_groups'])) {
             Translation::firstOrCreate([
+                'tenant_id' => $tenant_id,
                 'locale' => $this->app['config']['app.locale'],
                 'group' => $group,
                 'key' => $key,
@@ -412,7 +413,7 @@ class Manager
         return $this->files->put($this->ignoreFilePath, json_encode($this->ignoreLocales));
     }
 
-    public function removeLocale($locale)
+    public function removeLocale($tenant_id, $locale)
     {
         if (!$locale) {
             return false;
@@ -421,7 +422,7 @@ class Manager
         $this->saveIgnoredLocales();
         $this->ignoreLocales = $this->getIgnoredLocales();
 
-        Translation::where('locale', $locale)->delete();
+        Translation::where('tenant_id', $tenant_id)->where('locale', $locale)->delete();
     }
 
     public function getConfig($key = null)

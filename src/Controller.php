@@ -172,8 +172,9 @@ class Controller extends BaseController
 
     public function postRemoveLocale(Request $request)
     {
+        $tenant_id = TenantLibs::getCurrentTenantId();
         foreach ($request->input('remove-locale', []) as $locale => $val) {
-            $this->manager->removeLocale($locale);
+            $this->manager->removeLocale($tenant_id, $locale);
         }
         return redirect()->back();
     }
