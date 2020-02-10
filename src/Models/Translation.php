@@ -21,7 +21,7 @@ class Translation extends Model{
     const STATUS_CHANGED = 1;
 
     protected $table = 'omt_translations';
-    protected $guarded = array('id', 'tenant_id', 'created_at', 'updated_at');
+    protected $guarded = array('id', 'created_at', 'updated_at');
 
     public function scopeOfTranslatedGroup($query, $group)
     {
