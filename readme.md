@@ -1,43 +1,28 @@
-## Laravel 5 Translation Manager
-
-### For Laravel 4, please use the [0.1 branch](https://github.com/barryvdh/laravel-translation-manager/tree/0.1)!
-
-This is a package to manage Laravel translation files.
-It does not replace the Translation system, only import/export the php files to a database and make them editable through a webinterface.
-The workflow would be:
-
-    - Import translations: Read all translation files and save them in the database
-    - Find all translations in php/twig sources
-    - Optionally: Listen to missing translation with the custom Translator
-    - Translate all keys through the webinterface
-    - Export: Write all translations back to the translation files.
-
-This way, translations can be saved in git history and no overhead is introduced in production.
-
+## OMT Translation Manager (laravel 5)
 ![Screenshot](http://i.imgur.com/4th2krf.png)
 
 ## Installation
 
-Require this package in your composer.json and run composer update (or run `composer require barryvdh/laravel-translation-manager` directly):
+Require this package in your composer.json and run composer update (or run `composer require maodk87/omt-translation-manager` directly):
 
-    composer require barryvdh/laravel-translation-manager
+    composer require maodk87/omt-translation-manager
 
 After updating composer, add the ServiceProvider to the providers array in `config/app.php`
 
-    'Barryvdh\TranslationManager\ManagerServiceProvider',
+    'Omt\TranslationManager\ManagerServiceProvider',
 
 You need to run the migrations for this package.
 
-    $ php artisan vendor:publish --provider="Barryvdh\TranslationManager\ManagerServiceProvider" --tag=migrations
+    $ php artisan vendor:publish --provider="Omt\TranslationManager\ManagerServiceProvider" --tag=migrations
     $ php artisan migrate
 
 You need to publish the config file for this package. This will add the file `config/translation-manager.php`, where you can configure this package.
 
-    $ php artisan vendor:publish --provider="Barryvdh\TranslationManager\ManagerServiceProvider" --tag=config
+    $ php artisan vendor:publish --provider="Omt\TranslationManager\ManagerServiceProvider" --tag=config
 
 In order to edit the default template, the views must be published as well. The views will then be placed in `resources/views/vendor/translation-manager`.
 
-    $ php artisan vendor:publish --provider="Barryvdh\TranslationManager\ManagerServiceProvider" --tag=views
+    $ php artisan vendor:publish --provider="Omt\TranslationManager\ManagerServiceProvider" --tag=views
 
 Routes are added in the ServiceProvider. You can set the group parameters for the routes in the configuration.
 You can change the prefix or filter/middleware for the routes. If you want full customisation, you can extend the ServiceProvider and override the `map()` function.
@@ -98,12 +83,12 @@ You can also use the commands below.
 
 The import command will search through app/lang and load all strings in the database, so you can easily manage them.
 
-    $ php artisan translations:import
+    $ php artisan translations:import {tenant_id}
 
 Translation strings from app/lang/locale.json files will be imported to the __json_ group.
     
 Note: By default, only new strings are added. Translations already in the DB are kept the same. If you want to replace all values with the ones from the files, 
-add the `--replace` (or `-R`) option: `php artisan translations:import --replace`
+add the `--replace` (or `-R`) option: `php artisan translations:import {tenant_id} --replace`
 
 ### Find translations in source
 
@@ -111,7 +96,7 @@ The Find command/button will look search for all php/twig files in the app direc
 The found keys will be added to the database, so they can be easily translated.
 This can be done through the webinterface, or via an Artisan command.
 
-    $ php artisan translations:find
+    $ php artisan translations:find {tenant_id}
     
 If your project uses translation strings as keys, these will be stored into then __json_ group. 
 
@@ -121,23 +106,23 @@ The export command will write the contents of the database back to app/lang php 
 This will overwrite existing translations and remove all comments, so make sure to backup your data before using.
 Supply the group name to define which groups you want to publish.
 
-    $ php artisan translations:export <group>
+    $ php artisan translations:export {tenant_id} <group>
 
-For example, `php artisan translations:export reminders` when you have 2 locales (en/nl), will write to `app/lang/en/reminders.php` and `app/lang/nl/reminders.php`
+For example, `php artisan translations:export {tenant_id} reminders` when you have 2 locales (en/nl), will write to `app/lang/en/reminders.php` and `app/lang/nl/reminders.php`
 
-To export translation strings as keys to JSON files , use the `--json` (or `-J`) option: `php artisan translations:export --json`. This will import every entries from the __json_ group.
+To export translation strings as keys to JSON files , use the `--json` (or `-J`) option: `php artisan translations:export {tenant_id} --json`. This will import every entries from the __json_ group.
 
 ### Clean command
 
 The clean command will search for all translation that are NULL and delete them, so your interface is a bit cleaner. Note: empty translations are never exported.
 
-    $ php artisan translations:clean
+    $ php artisan translations:clean {tenant_id}
 
 ### Reset command
 
 The reset command simply clears all translation in the database, so you can start fresh (by a new import). Make sure to export your work if needed before doing this.
 
-    $ php artisan translations:reset
+    $ php artisan translations:reset {tenant_id}
 
 
 
@@ -148,7 +133,7 @@ To detect missing translations, we can swap the Laravel TranslationServiceProvid
 In your `config/app.php`, comment out the original TranslationServiceProvider and add the one from this package:
 
     //'Illuminate\Translation\TranslationServiceProvider',
-    'Barryvdh\TranslationManager\TranslationServiceProvider',
+    'Omt\TranslationManager\TranslationServiceProvider',
 
 This will extend the Translator and will create a new database entry, whenever a key is not found, so you have to visit the pages that use them.
 This way it shows up in the webinterface and can be edited and later exported.
