@@ -1,14 +1,15 @@
-<?php namespace Barryvdh\TranslationManager;
+<?php namespace Omt\TranslationManager;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
-use Barryvdh\TranslationManager\Models\Translation;
+use Omt\TranslationManager\Models\Translation;
 use Illuminate\Support\Collection;
+use Omt\TranslationManager\Libs\TenantLibs;
 use Tanmuhittin\LaravelGoogleTranslate\Commands\TranslateFilesCommand;
 
 class Controller extends BaseController
 {
-    /** @var \Barryvdh\TranslationManager\Manager  */
+    /** @var \Barryvdh\TranslationManager\Manager */
     protected $manager;
 
     public function __construct(Manager $manager)
@@ -18,10 +19,12 @@ class Controller extends BaseController
 
     public function getIndex($group = null)
     {
-        $locales = $this->manager->getLocales();
-        $groups = Translation::groupBy('group');
+        $tenant_id = TenantLibs::getCurrentTenantId();
+
+        $locales = $this->manager->getLocales($tenant_id);
+        $groups = Translation::where('tenant_id', $tenant_id)->groupBy('group');
         $excludedGroups = $this->manager->getConfig('exclude_groups');
-        if($excludedGroups){
+        if ($excludedGroups) {
             $groups->whereNotIn('group', $excludedGroups);
         }
 
@@ -29,25 +32,25 @@ class Controller extends BaseController
         if ($groups instanceof Collection) {
             $groups = $groups->all();
         }
-        $groups = [''=>'Choose a group'] + $groups;
-        $numChanged = Translation::where('group', $group)->where('status', Translation::STATUS_CHANGED)->count();
+        $groups = ['' => 'Choose a group'] + $groups;
+        $numChanged = Translation::where('tenant_id', $tenant_id)->where('group', $group)->where('status', Translation::STATUS_CHANGED)->count();
 
 
-        $allTranslations = Translation::where('group', $group)->orderBy('key', 'asc')->get();
+        $allTranslations = Translation::where('tenant_id', $tenant_id)->where('group', $group)->orderBy('key', 'asc')->get();
         $numTranslations = count($allTranslations);
         $translations = [];
-        foreach($allTranslations as $translation){
+        foreach ($allTranslations as $translation) {
             $translations[$translation->key][$translation->locale] = $translation;
         }
 
-         return view('translation-manager::index')
+        return view('translation-manager::index')
             ->with('translations', $translations)
             ->with('locales', $locales)
             ->with('groups', $groups)
             ->with('group', $group)
             ->with('numTranslations', $numTranslations)
             ->with('numChanged', $numChanged)
-            ->with('editUrl', $group ? action('\Barryvdh\TranslationManager\Controller@postEdit', [$group]) : null)
+            ->with('editUrl', $group ? action('\Omt\TranslationManager\Controller@postEdit', [$group]) : null)
             ->with('deleteEnabled', $this->manager->getConfig('delete_enabled'));
     }
 
@@ -58,8 +61,9 @@ class Controller extends BaseController
 
     protected function loadLocales()
     {
+        $tenant_id = TenantLibs::getCurrentTenantId();
         //Set the default locale as the first one.
-        $locales = Translation::groupBy('locale')
+        $locales = Translation::where('tenant_id', $tenant_id)->groupBy('locale')
             ->select('locale')
             ->get()
             ->pluck('locale');
@@ -75,9 +79,9 @@ class Controller extends BaseController
     {
         $keys = explode("\n", request()->get('keys'));
 
-        foreach($keys as $key){
+        foreach ($keys as $key) {
             $key = trim($key);
-            if($group && $key){
+            if ($group && $key) {
                 $this->manager->missingKey('*', $group, $key);
             }
         }
@@ -86,17 +90,19 @@ class Controller extends BaseController
 
     public function postEdit($group = null)
     {
-        if(!in_array($group, $this->manager->getConfig('exclude_groups'))) {
+        $tenant_id = TenantLibs::getCurrentTenantId();
+        if (!in_array($group, $this->manager->getConfig('exclude_groups'))) {
             $name = request()->get('name');
             $value = request()->get('value');
 
             list($locale, $key) = explode('|', $name, 2);
             $translation = Translation::firstOrNew([
+                'tenant_id' => $tenant_id,
                 'locale' => $locale,
                 'group' => $group,
                 'key' => $key,
             ]);
-            $translation->value = (string) $value ?: null;
+            $translation->value = (string)$value ?: null;
             $translation->status = Translation::STATUS_CHANGED;
             $translation->save();
             return array('status' => 'ok');
@@ -105,8 +111,9 @@ class Controller extends BaseController
 
     public function postDelete($group = null, $key)
     {
-        if(!in_array($group, $this->manager->getConfig('exclude_groups')) && $this->manager->getConfig('delete_enabled')) {
-            Translation::where('group', $group)->where('key', $key)->delete();
+        $tenant_id = TenantLibs::getCurrentTenantId();
+        if (!in_array($group, $this->manager->getConfig('exclude_groups')) && $this->manager->getConfig('delete_enabled')) {
+            Translation::where('tenant_id', $tenant_id)->where('group', $group)->where('key', $key)->delete();
             return ['status' => 'ok'];
         }
     }
@@ -121,20 +128,22 @@ class Controller extends BaseController
 
     public function postFind()
     {
-        $numFound = $this->manager->findTranslations();
+        $tenant_id = TenantLibs::getCurrentTenantId();
+        $numFound = $this->manager->findTranslations($tenant_id);
 
-        return ['status' => 'ok', 'counter' => (int) $numFound];
+        return ['status' => 'ok', 'counter' => (int)$numFound];
     }
 
     public function postPublish($group = null)
     {
-         $json = false;
+        $tenant_id = TenantLibs::getCurrentTenantId();
+        $json = false;
 
-        if($group === '_json'){
+        if ($group === '_json') {
             $json = true;
         }
 
-        $this->manager->exportTranslations($group, $json);
+        $this->manager->exportTranslations($tenant_id, $group, $json);
 
         return ['status' => 'ok'];
     }
@@ -142,19 +151,17 @@ class Controller extends BaseController
     public function postAddGroup(Request $request)
     {
         $group = str_replace(".", '', $request->input('new-group'));
-        if ($group)
-        {
-            return redirect()->action('\Barryvdh\TranslationManager\Controller@getView',$group);
-        }
-        else
-        {
+        if ($group) {
+            return redirect()->action('\Omt\TranslationManager\Controller@getView', $group);
+        } else {
             return redirect()->back();
         }
     }
 
     public function postAddLocale(Request $request)
     {
-        $locales = $this->manager->getLocales();
+        $tenant_id = TenantLibs::getCurrentTenantId();
+        $locales = $this->manager->getLocales($tenant_id);
         $newLocale = str_replace([], '-', trim($request->input('new-locale')));
         if (!$newLocale || in_array($newLocale, $locales)) {
             return redirect()->back();
@@ -171,15 +178,17 @@ class Controller extends BaseController
         return redirect()->back();
     }
 
-    public function postTranslateMissing(Request $request){
-        $locales = $this->manager->getLocales();
+    public function postTranslateMissing(Request $request)
+    {
+        $tenant_id = TenantLibs::getCurrentTenantId();
+        $locales = $this->manager->getLocales($tenant_id);
         $newLocale = str_replace([], '-', trim($request->input('new-locale')));
-        if($request->has('with-translations') && $request->has('base-locale') && in_array($request->input('base-locale'),$locales) && $request->has('file') && in_array($newLocale, $locales)){
+        if ($request->has('with-translations') && $request->has('base-locale') && in_array($request->input('base-locale'), $locales) && $request->has('file') && in_array($newLocale, $locales)) {
             $base_locale = $request->get('base-locale');
             $group = $request->get('file');
-            $base_strings = Translation::where('group', $group)->where('locale', $base_locale)->get();
+            $base_strings = Translation::where('tenant_id', $tenant_id)->where('group', $group)->where('locale', $base_locale)->get();
             foreach ($base_strings as $base_string) {
-                $base_query = Translation::where('group', $group)->where('locale', $newLocale)->where('key', $base_string->key);
+                $base_query = Translation::where('tenant_id', $tenant_id)->where('group', $group)->where('locale', $newLocale)->where('key', $base_string->key);
                 if ($base_query->exists() && $base_query->whereNotNull('value')->exists()) {
                     // Translation already exists. Skip
                     continue;
@@ -190,7 +199,7 @@ class Controller extends BaseController
                     'name' => $newLocale . '|' . $base_string->key,
                 ]);
                 app()->call(
-                    'Barryvdh\TranslationManager\Controller@postEdit',
+                    'Omt\TranslationManager\Controller@postEdit',
                     [
                         'group' => $group
                     ]

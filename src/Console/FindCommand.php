@@ -1,8 +1,8 @@
 <?php
 
-namespace Barryvdh\TranslationManager\Console;
+namespace Omt\TranslationManager\Console;
 
-use Barryvdh\TranslationManager\Manager;
+use Omt\TranslationManager\Manager;
 use Illuminate\Console\Command;
 
 class FindCommand extends Command
@@ -12,7 +12,7 @@ class FindCommand extends Command
      *
      * @var string
      */
-    protected $name = 'translations:find';
+    protected $name = 'translations:find {tenant_id}';
 
     /**
      * The console command description.
@@ -35,7 +35,8 @@ class FindCommand extends Command
      */
     public function handle()
     {
-        $counter = $this->manager->findTranslations(null);
+        $tenant_id = $this->argument('tenant_id');
+        $counter = $this->manager->findTranslations($tenant_id, null);
         $this->info('Done importing, processed '.$counter.' items!');
     }
 }

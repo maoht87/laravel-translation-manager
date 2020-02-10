@@ -12,10 +12,11 @@ class CreateTranslationsTable extends Migration {
 	 */
 	public function up()
 	{
-        Schema::create('ltm_translations', function(Blueprint $table)
+        Schema::create('omt_translations', function(Blueprint $table)
         {
 	    $table->collation = 'utf8mb4_bin';
             $table->bigIncrements('id');
+            $table->integer('tenant_id')->default(0);
             $table->integer('status')->default(0);
             $table->string('locale');
             $table->string('group');
@@ -32,7 +33,7 @@ class CreateTranslationsTable extends Migration {
 	 */
 	public function down()
 	{
-        Schema::drop('ltm_translations');
+        Schema::drop('omt_translations');
 	}
 
 }

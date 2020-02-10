@@ -1,8 +1,8 @@
 <?php
 
-namespace Barryvdh\TranslationManager\Console;
+namespace Omt\TranslationManager\Console;
 
-use Barryvdh\TranslationManager\Manager;
+use Omt\TranslationManager\Manager;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -14,7 +14,7 @@ class ExportCommand extends Command
      *
      * @var string
      */
-    protected $name = 'translations:export {group}';
+    protected $name = 'omt_translations:export {tenant_id} {group}';
 
     /**
      * The console command description.
@@ -37,6 +37,7 @@ class ExportCommand extends Command
      */
     public function handle()
     {
+        $tenant_id = $this->argument('tenant_id');
         $group = $this->option('all') ? '*' : $this->argument('group');
         $json = $this->option('json');
 
@@ -53,10 +54,10 @@ class ExportCommand extends Command
         }
 
         if ( $group == '*' ) {
-            $this->manager->exportAllTranslations();
+            $this->manager->exportAllTranslations($tenant_id);
         }
         else {
-            $this->manager->exportTranslations($group, $json);
+            $this->manager->exportTranslations($tenant_id, $group, $json);
         }
 
         if (!is_null($group)) {

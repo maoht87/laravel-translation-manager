@@ -1,16 +1,16 @@
 {
-  "name": "barryvdh/laravel-translation-manager",
-  "description": "Manage Laravel Translations",
+  "name": "maodk87/omt-translation-manager",
+  "description": "OMT Manage Translations",
   "keywords": [
-    "laravel",
+    "omt",
     "translations",
     "translator"
   ],
   "license": "MIT",
   "authors": [
     {
-      "name": "Barry vd. Heuvel",
-      "email": "barryvdh@gmail.com"
+      "name": "MaoDK",
+      "email": "maodk61@gmail.com"
     }
   ],
   "require": {
@@ -22,7 +22,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Barryvdh\\TranslationManager\\": "src/"
+      "Omt\\TranslationManager\\": "src/"
     }
   },
   "extra": {
@@ -31,7 +31,7 @@
     },
     "laravel": {
       "providers": [
-        "Barryvdh\\TranslationManager\\ManagerServiceProvider"
+        "Omt\\TranslationManager\\ManagerServiceProvider"
       ]
     }
   },
