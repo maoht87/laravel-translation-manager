@@ -19,9 +19,9 @@ class ManagerServiceProvider extends ServiceProvider {
 	public function register()
 	{
         // Register the config publish path
-        $configPath = __DIR__ . '/../config/translation-manager.php';
-        $this->mergeConfigFrom($configPath, 'translation-manager');
-        $this->publishes([$configPath => config_path('translation-manager.php')], 'config');
+        $configPath = __DIR__ . '/../config/omt-translation-manager.php';
+        $this->mergeConfigFrom($configPath, 'omt-translation-manager');
+        $this->publishes([$configPath => config_path('omt-translation-manager.php')], 'config');
 
         $this->app->singleton('translation-manager', function ($app) {
             $manager = $app->make('Omt\TranslationManager\Manager');
