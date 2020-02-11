@@ -14,7 +14,7 @@ class ExportCommand extends Command
      *
      * @var string
      */
-    protected $name = 'omt_translations:export {tenant_id} {group}';
+    protected $name = 'omt_translations:export {group}';
 
     /**
      * The console command description.
@@ -37,8 +37,19 @@ class ExportCommand extends Command
      */
     public function handle()
     {
-        $tenant_id = $this->argument('tenant_id');
-        $group = $this->option('all') ? '*' : $this->argument('group');
+        $argument_data = $this->argument('group');
+        $argument_data_items = explode('#',$argument_data);
+        $group = '*';
+        $tenant_id = 0;
+
+        if(isset($argument_data_items[0])){
+            $tenant_id = $argument_data_items[0];
+        }
+        if(isset($argument_data_items[1])){
+            $group = $argument_data_items[1];
+        }
+
+        $group = $this->option('all') ? '*' : $group;
         $json = $this->option('json');
 
         if (is_null($group) && !$json) {

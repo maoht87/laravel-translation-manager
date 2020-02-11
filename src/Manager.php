@@ -4,6 +4,7 @@ namespace Omt\TranslationManager;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Omt\TranslationManager\Libs\TenantLibs;
 use Symfony\Component\Finder\Finder;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -136,12 +137,19 @@ class Manager
             return false;
         }
         $value = (string)$value;
-        $translation = Translation::firstOrNew([
-            'tenant_id' => $tenant_id,
-            'locale' => $locale,
-            'group' => $group,
-            'key' => $key,
-        ]);
+
+        $translation_info = Translation::where('tenant_id', $tenant_id)->where('locale', $locale)
+            ->where('group', $group)->where('key', $key)->first();
+        if(empty($translation_info) || empty($translation_info->id)){
+            Translation::insert([
+                'tenant_id' => $tenant_id,
+                'locale' => $this->app['config']['app.locale'],
+                'group' => $group,
+                'key' => $key,
+                'created_by' => TenantLibs::getCurrentLoginUserId(),
+                'updated_by' => TenantLibs::getCurrentLoginUserId(),
+            ]);
+        }
 
         // Check if the database is different then the files
         $newStatus = $translation->value === $value ? Translation::STATUS_SAVED : Translation::STATUS_CHANGED;
@@ -243,12 +251,18 @@ class Manager
     public function missingKey($tenant_id, $namespace, $group, $key)
     {
         if (!in_array($group, $this->config['exclude_groups'])) {
-            Translation::firstOrCreate([
-                'tenant_id' => $tenant_id,
-                'locale' => $this->app['config']['app.locale'],
-                'group' => $group,
-                'key' => $key,
-            ]);
+            $translation_info = Translation::where('tenant_id', $tenant_id)->where('locale', $this->app['config']['app.locale'])
+            ->where('group', $group)->where('key', $key)->first();
+            if(empty($translation_info) || empty($translation_info->id)){
+                Translation::insert([
+                    'tenant_id' => $tenant_id,
+                    'locale' => $this->app['config']['app.locale'],
+                    'group' => $group,
+                    'key' => $key,
+                    'created_by' => TenantLibs::getCurrentLoginUserId(),
+                    'updated_by' => TenantLibs::getCurrentLoginUserId(),
+                ]);
+            }
         }
     }
 
@@ -300,7 +314,7 @@ class Manager
                         $this->files->put($path, $output);
                     }
                 }
-                Translation::where('tenant_id', $tenant_id)->ofTranslatedGroup($group)->update(['status' => Translation::STATUS_SAVED]);
+                Translation::where('tenant_id', $tenant_id)->ofTranslatedGroup($group)->update(['status' => Translation::STATUS_SAVED, 'updated_by' => TenantLibs::getCurrentLoginUserId()]);
             }
         }
 
@@ -318,7 +332,7 @@ class Manager
                 }
             }
 
-            Translation::where('tenant_id', $tenant_id)->ofTranslatedGroup(self::JSON_GROUP)->update(['status' => Translation::STATUS_SAVED]);
+            Translation::where('tenant_id', $tenant_id)->ofTranslatedGroup(self::JSON_GROUP)->update(['status' => Translation::STATUS_SAVED, 'updated_by' => TenantLibs::getCurrentLoginUserId()]);
         }
 
         $this->events->dispatch(new TranslationsExportedEvent());

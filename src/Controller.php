@@ -32,7 +32,7 @@ class Controller extends BaseController
         if ($groups instanceof Collection) {
             $groups = $groups->all();
         }
-        $groups = ['' => 'Choose a group'] + $groups;
+        $groups = collect(['' => 'Choose a group'])->merge($groups);
         $numChanged = Translation::where('tenant_id', $tenant_id)->where('group', $group)->where('status', Translation::STATUS_CHANGED)->count();
 
 

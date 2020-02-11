@@ -22,6 +22,7 @@ class Translation extends Model{
 
     protected $table = 'omt_translations';
     protected $guarded = array('id', 'created_at', 'updated_at');
+    public $fillable = ['tenant_id', 'status', 'locale', 'group', 'key', 'value', 'created_by', 'updated_by'];
 
     public function scopeOfTranslatedGroup($query, $group)
     {

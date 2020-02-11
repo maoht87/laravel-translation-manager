@@ -8,6 +8,7 @@
 
 namespace Omt\TranslationManager\Libs;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class TenantLibs
@@ -32,5 +33,16 @@ class TenantLibs
             return $tenant_info->id;
         }
         return 0;
+    }
+    /**
+     * get auth user id
+     * @return int
+     */
+    public static function getCurrentLoginUserId()
+    {
+        if (Auth::check()) {
+            return Auth::user()->id;
+        }
+        return -10;//job save
     }
 }
